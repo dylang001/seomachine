@@ -53,7 +53,7 @@ class ContentScrubber:
         # "Utilize" → "use"
         (r"\b[Uu]tilize(?:s|d)?\b", "use"),
         # "Harness" → "use"
-        (r"\b[Hh]arness(?:es|ed|ing)? (?:the power of |the potential of )?", "use "),
+        (r"\b[Hh]arness(?:es|ed)? (?:the power of |the potential of )?", "use "),
         # "In conclusion," / "To summarize," / "In summary,"
         (r"^[Ii]n conclusion,? ?", ""),
         (r"^[Tt]o summarize,? ?", ""),
@@ -109,13 +109,13 @@ class ContentScrubber:
         # "Elevate" → "improve"
         (r"\b[Ee]levate(?:s|d)?\b", "improve"),
         # "Empower" → "help" or "enable"
-        (r"\b[Ee]mpower(?:s|ed|ing)?\b", "enable"),
+        (r"\b[Ee]mpower(?:s)?\b", "enable"),
         # "Streamline" → "simplify"
         (r"\b[Ss]treamline(?:s|d)?\b", "simplify"),
         # "Revolutionize" → "transform"
         (r"\b[Rr]evolutionize(?:s|d)?\b", "transform"),
         # "Foster" → "encourage"
-        (r"\b[Ff]oster(?:s|ed|ing)?\b", "encourage"),
+        (r"\b[Ff]oster(?:s)?\b", "encourage"),
         # "Seamlessly" → "smoothly"
         (r"\b[Ss]eamlessly\b", "smoothly"),
         # "Cutting-edge" → "modern"
@@ -127,9 +127,9 @@ class ContentScrubber:
         # "Game-changer" / "game-changing" → "breakthrough" / "major"
         (r"\b[Gg]ame-chang(?:er|ing)\b", "breakthrough"),
         # "Embark on" → "start" or "begin"
-        (r"\b[Ee]mbark(?:s|ed|ing)? (?:on|upon)\b", "start"),
+        (r"\b[Ee]mbark(?:s)? (?:on|upon)\b", "start"),
         # "Spearhead" → "lead"
-        (r"\b[Ss]pearhead(?:s|ed|ing)?\b", "lead"),
+        (r"\b[Ss]pearhead(?:s)?\b", "lead"),
         # "Pivotal" → "key"
         (r"\b[Pp]ivotal\b", "key"),
         # "Plethora" → "range"
@@ -351,6 +351,7 @@ class ContentScrubber:
         """Replace overused AI filler adverbs at the start of sentences."""
         for adverb, replacement in self.AI_FILLER_ADVERBS.items():
             # Match adverb at the start of a sentence (after newline, period, or start)
+            # Also capture the first char after the match to capitalize when replacement is empty
             pattern = r'(?:^|(?<=\. )|(?<=\.\n)|(?<=\n))' + re.escape(adverb.capitalize()) + r',? ?'
             new_text = (replacement + ', ') if replacement else ''
             content, count = re.subn(pattern, new_text, content, flags=re.MULTILINE)
@@ -358,6 +359,9 @@ class ContentScrubber:
             pattern_lower = r'(?<=; )' + re.escape(adverb) + r',? ?'
             content, count2 = re.subn(pattern_lower, new_text.lower() if new_text else '', content)
             self.stats['ai_filler_adverbs_replaced'] += count + count2
+
+        # Capitalize first letter after sentence boundary when adverb removal left it lowercase
+        content = re.sub(r'(?:^|(?<=\. )|(?<=\.\n)|(?<=\n))([a-z])', lambda m: m.group(1).upper(), content, flags=re.MULTILINE)
         return content
 
     def _clean_whitespace(self, content: str) -> str:
