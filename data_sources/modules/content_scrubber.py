@@ -42,7 +42,9 @@ class ContentScrubber:
         # "It's important to note that X" → "X"
         (r"[Ii]t(?:'s| is) (?:important|worth|crucial|essential) to (?:note|mention|highlight|understand|remember|recognize|emphasize) that ", ""),
         # "In today's [fast-paced/digital/modern] landscape/world"
-        (r"[Ii]n today'?s (?:fast-paced|digital|modern|ever-changing|rapidly evolving|dynamic) (?:landscape|world|era|age|environment),? ?", ""),
+        (r"[Ii]n today'?s (?:(?:fast-paced|digital|modern|ever-changing|rapidly evolving|dynamic|competitive|complex)\s*)+(?:landscape|world|era|age|environment),? ?", ""),
+        # "In the ever-evolving world/landscape of"
+        (r"[Ii]n the (?:ever-evolving|ever-changing|rapidly evolving|constantly changing) (?:world|landscape|realm|field) of ", ""),
         # "Delve/dive into"
         (r"\b[Dd]elve(?:s|d)? (?:into|deeper)\b", "explore"),
         (r"\b[Dd]ive(?:s|d)? (?:deep )?into\b", "explore"),
@@ -50,24 +52,128 @@ class ContentScrubber:
         (r"\b[Ll]everage(?:s|d)?\b", "use"),
         # "Utilize" → "use"
         (r"\b[Uu]tilize(?:s|d)?\b", "use"),
-        # "In conclusion," / "To summarize,"
+        # "Harness" → "use"
+        (r"\b[Hh]arness(?:es|ed)? (?:the power of |the potential of )?", "use "),
+        # "In conclusion," / "To summarize," / "In summary,"
         (r"^[Ii]n conclusion,? ?", ""),
+        (r"^[Tt]o summarize,? ?", ""),
+        (r"^[Ii]n summary,? ?", ""),
+        (r"^[Aa]ll things considered,? ?", ""),
         # "It's worth mentioning" / "It bears mentioning"
         (r"[Ii]t(?:'s| is) worth mentioning (?:that )?", ""),
         (r"[Ii]t bears mentioning (?:that )?", ""),
+        # "It should be noted that"
+        (r"[Ii]t should be noted (?:that )?", ""),
         # "At the end of the day"
         (r"[Aa]t the end of the day,? ?", ""),
         # "This comprehensive guide"
         (r"[Tt]his comprehensive (?:guide|overview|article|resource)", "this guide"),
         # "Without further ado"
         (r"[Ww]ithout further ado,? ?", ""),
+        # "Navigating the complexities of" → remove
+        (r"[Nn]avigat(?:e|es|ing) the (?:complexities|intricacies|nuances) of ", ""),
+        # "In the realm of" → "in"
+        (r"[Ii]n the realm of ", "in "),
+        # "It goes without saying" → remove
+        (r"[Ii]t goes without saying (?:that )?,? ?", ""),
+        # "Needless to say" → remove
+        (r"[Nn]eedless to say,? ?", ""),
+        # "In essence" → remove
+        (r"[Ii]n essence,? ?", ""),
+        # "The reality is that" → remove
+        (r"[Tt]he reality is (?:that )?,? ?", ""),
+        # "As a matter of fact" → remove
+        (r"[Aa]s a matter of fact,? ?", ""),
+        # "The fact of the matter is" → remove
+        (r"[Tt]he fact of the matter is (?:that )?,? ?", ""),
+        # "When all is said and done" → remove
+        (r"[Ww]hen all is said and done,? ?", ""),
+        # "It's no secret that" → remove
+        (r"[Ii]t(?:'s| is) no secret (?:that )?", ""),
+        # "In order to" → "to"
+        (r"\b[Ii]n order to\b", "to"),
+        # "Due to the fact that" → "because"
+        (r"[Dd]ue to the fact that", "because"),
+        # "In light of" → "given"
+        (r"[Ii]n light of (?:the fact that )?", "given "),
+        # "With regard(s) to" → "about"
+        (r"[Ww]ith regards? to", "about"),
+        # "At this point in time" → "now"
+        (r"[Aa]t this point in time", "now"),
+        # "For the purpose of" → "to" or "for"
+        (r"[Ff]or the purpose of", "for"),
+        # "When it comes to" → "with" or "for"
+        (r"[Ww]hen it comes to", "for"),
+        # "Unlock the power/potential of" → "find" or "reach"
+        (r"[Uu]nlock(?:s|ed|ing)? the (?:full )?(?:power|potential|secrets?) of", "reach the potential of"),
+        # "Elevate" → "improve"
+        (r"\b[Ee]levate(?:s|d)?\b", "improve"),
+        # "Empower" → "help" or "enable"
+        (r"\b[Ee]mpower(?:s)?\b", "enable"),
+        # "Streamline" → "simplify"
+        (r"\b[Ss]treamline(?:s|d)?\b", "simplify"),
+        # "Revolutionize" → "transform"
+        (r"\b[Rr]evolutionize(?:s|d)?\b", "transform"),
+        # "Foster" → "encourage"
+        (r"\b[Ff]oster(?:s)?\b", "encourage"),
+        # "Seamlessly" → "smoothly"
+        (r"\b[Ss]eamlessly\b", "smoothly"),
+        # "Cutting-edge" → "modern"
+        (r"\b[Cc]utting-edge\b", "modern"),
+        # "Robust" → "strong"
+        (r"\b[Rr]obust\b", "strong"),
+        # "Holistic" → "complete"
+        (r"\b[Hh]olistic(?:ally)?\b", "complete"),
+        # "Game-changer" / "game-changing" → "breakthrough" / "major"
+        (r"\b[Gg]ame-chang(?:er|ing)\b", "breakthrough"),
+        # "Embark on" → "start" or "begin"
+        (r"\b[Ee]mbark(?:s)? (?:on|upon)\b", "start"),
+        # "Spearhead" → "lead"
+        (r"\b[Ss]pearhead(?:s)?\b", "lead"),
+        # "Pivotal" → "key"
+        (r"\b[Pp]ivotal\b", "key"),
+        # "Plethora" → "range"
+        (r"\b[Pp]lethora\b", "range"),
+        # "Myriad" → "many"
+        (r"\b[Mm]yriad\b", "many"),
+        # "Paramount" → "vital"
+        (r"\b[Pp]aramount\b", "vital"),
+        # "Tapestry" → "mix"
+        (r"\b[Tt]apestry\b", "mix"),
+        # "Synergy" / "synergies" → "collaboration"
+        (r"\b[Ss]ynerg(?:y|ies)\b", "collaboration"),
+        # "Paradigm" → "approach"
+        (r"\b[Pp]aradigm\b", "approach"),
+        # "Multifaceted" → "varied"
+        (r"\b[Mm]ultifaceted\b", "varied"),
+        # "Firstly" → "First", "Secondly" → "Second", etc.
+        (r"\bFirstly\b", "First"),
+        (r"\bSecondly\b", "Second"),
+        (r"\bThirdly\b", "Third"),
+        (r"\bLastly\b", "Last"),
+        # "Let's explore/look at/examine" at start of sentence → remove
+        (r"^[Ll]et(?:'s| us) (?:explore|look at|examine|take a (?:look|closer look) at) ", ""),
+        # "As we navigate" → remove
+        (r"[Aa]s we navigate (?:the (?:world|landscape|complexities|realm) of )?", ""),
     ]
 
-    # Overused AI filler adverbs
-    AI_FILLER_ADVERBS = [
-        'moreover', 'furthermore', 'additionally', 'consequently',
-        'nevertheless', 'nonetheless', 'henceforth', 'thereby',
-    ]
+    # Overused AI filler adverbs (sentence-initial usage replaced with simpler connectors)
+    AI_FILLER_ADVERBS = {
+        'moreover': 'Also',
+        'furthermore': 'Also',
+        'additionally': 'Also',
+        'consequently': 'So',
+        'nevertheless': 'Still',
+        'nonetheless': 'Still',
+        'henceforth': 'From now on',
+        'thereby': 'This way',
+        'subsequently': 'Then',
+        'conversely': 'On the flip side',
+        'notwithstanding': 'Despite this',
+        'undoubtedly': '',
+        'indubitably': '',
+        'unquestionably': '',
+    }
 
     def __init__(self):
         self.stats = {
@@ -75,6 +181,7 @@ class ContentScrubber:
             'emdashes_replaced': 0,
             'format_control_removed': 0,
             'ai_phrases_replaced': 0,
+            'ai_filler_adverbs_replaced': 0,
         }
 
     def scrub(self, content: str) -> Tuple[str, Dict]:
@@ -92,6 +199,8 @@ class ContentScrubber:
             'unicode_removed': 0,
             'emdashes_replaced': 0,
             'format_control_removed': 0,
+            'ai_phrases_replaced': 0,
+            'ai_filler_adverbs_replaced': 0,
         }
 
         # Step 1: Remove specific watermark characters
@@ -106,7 +215,10 @@ class ContentScrubber:
         # Step 4: Replace AI-telltale phrases
         content = self._replace_ai_phrases(content)
 
-        # Step 5: Clean up any double spaces created by removals
+        # Step 5: Replace AI filler adverbs at sentence start
+        content = self._replace_filler_adverbs(content)
+
+        # Step 6: Clean up any double spaces created by removals
         content = self._clean_whitespace(content)
 
         return content, self.stats
@@ -235,6 +347,23 @@ class ContentScrubber:
             self.stats['ai_phrases_replaced'] += count
         return content
 
+    def _replace_filler_adverbs(self, content: str) -> str:
+        """Replace overused AI filler adverbs at the start of sentences."""
+        for adverb, replacement in self.AI_FILLER_ADVERBS.items():
+            # Match adverb at the start of a sentence (after newline, period, or start)
+            # Also capture the first char after the match to capitalize when replacement is empty
+            pattern = r'(?:^|(?<=\. )|(?<=\.\n)|(?<=\n))' + re.escape(adverb.capitalize()) + r',? ?'
+            new_text = (replacement + ', ') if replacement else ''
+            content, count = re.subn(pattern, new_text, content, flags=re.MULTILINE)
+            # Also match lowercase after semicolons
+            pattern_lower = r'(?<=; )' + re.escape(adverb) + r',? ?'
+            content, count2 = re.subn(pattern_lower, new_text.lower() if new_text else '', content)
+            self.stats['ai_filler_adverbs_replaced'] += count + count2
+
+        # Capitalize first letter after sentence boundary when adverb removal left it lowercase
+        content = re.sub(r'(?:^|(?<=\. )|(?<=\.\n)|(?<=\n))([a-z])', lambda m: m.group(1).upper(), content, flags=re.MULTILINE)
+        return content
+
     def _clean_whitespace(self, content: str) -> str:
         """Clean up multiple spaces and normalize whitespace."""
         # Replace multiple spaces with single space (but not in specific contexts)
@@ -277,6 +406,7 @@ def scrub_content(content: str, verbose: bool = False) -> str:
         print(f"  - Format-control chars removed: {stats['format_control_removed']}")
         print(f"  - Em-dashes replaced: {stats['emdashes_replaced']}")
         print(f"  - AI phrases replaced: {stats['ai_phrases_replaced']}")
+        print(f"  - AI filler adverbs replaced: {stats['ai_filler_adverbs_replaced']}")
 
     return cleaned_content
 
